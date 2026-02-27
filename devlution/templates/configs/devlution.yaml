@@ -1,0 +1,127 @@
+# devlution.yaml — drop this in your repo root
+
+project:
+  name: "my-service"
+  language: "python"           # python | typescript | go | java
+  test_command: "pytest"
+  lint_command: "ruff check ."
+  main_branch: "main"
+
+llm:
+  provider: "anthropic"
+  model: "claude-sonnet-4-20250514"
+  fallback_model: "claude-sonnet-4-20250514"
+  max_tokens: 8192
+  temperature: 0.2
+
+agents:
+  planner:
+    enabled: true
+    max_subtasks: 10
+  coder:
+    enabled: true
+    max_iterations: 3
+    style_guide: ".cursor/rules"
+  reviewer:
+    enabled: true
+    auto_approve_threshold: 0.92
+    block_on:
+      - "security"
+      - "data_loss"
+  tester:
+    enabled: true
+    frameworks:
+      - "pytest"
+    coverage_threshold: 80
+    generate_on:
+      - "new_file"
+      - "modified_function"
+  debugger:
+    enabled: true
+    max_fix_attempts: 3
+    sources:
+      - "ci_logs"
+      - "sentry"
+      - "test_output"
+
+supervision:
+  gates:
+    - id: "pre-merge-staging"
+      trigger: "before_merge_to_staging"
+      type: "human_approval"
+      notify:
+        - "slack"
+        - "email"
+      timeout_hours: 24
+      on_timeout: "block"
+
+    - id: "pre-merge-main"
+      trigger: "before_merge_to_main"
+      type: "human_approval"
+      notify:
+        - "slack"
+        - "email"
+      required_approvers: 1
+      timeout_hours: 8
+
+    - id: "confidence-gate"
+      trigger: "on_low_confidence"
+      threshold: 0.75
+      type: "human_approval"
+      notify:
+        - "slack"
+
+  audit_log: ".devlution/audit.jsonl"
+
+integrations:
+  github:
+    enabled: true
+    auto_label_prs: true
+    pr_template: ".github/pull_request_template.md"
+    labels:
+      ai_generated: "ai-generated"
+      needs_review: "needs-review"
+  sentry:
+    enabled: false
+    project_slug: "my-service"
+    auto_create_issues: true
+  slack:
+    enabled: false
+    channel: "#dev-pipeline"
+  jira:
+    enabled: false
+
+pipeline:
+  flow:
+    - "planner"
+    - "coder"
+    - "reviewer"
+    - "tester"
+    - "gate:pre-merge-staging"
+    - "gate:pre-merge-main"
+
+  triggers:
+    - on: "github_issue"
+      label: "ai-task"
+      flow:
+        - "planner"
+        - "coder"
+        - "reviewer"
+        - "tester"
+        - "gate:pre-merge-staging"
+    - on: "ci_failure"
+      flow:
+        - "debugger"
+        - "tester"
+        - "reviewer"
+    - on: "sentry_alert"
+      flow:
+        - "debugger"
+        - "coder"
+        - "tester"
+        - "gate:pre-merge-staging"
+    - on: "schedule"
+      cron: "0 2 * * *"
+      flow:
+        - "tester"
+        - "reviewer"
