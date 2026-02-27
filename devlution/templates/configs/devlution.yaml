@@ -101,7 +101,7 @@ pipeline:
     - "gate:pre-merge-main"
 
   triggers:
-    - on: "github_issue"
+    - "on": "github_issue"
       label: "ai-task"
       flow:
         - "planner"
@@ -109,18 +109,18 @@ pipeline:
         - "reviewer"
         - "tester"
         - "gate:pre-merge-staging"
-    - on: "ci_failure"
+    - "on": "ci_failure"
       flow:
         - "debugger"
         - "tester"
         - "reviewer"
-    - on: "sentry_alert"
+    - "on": "sentry_alert"
       flow:
         - "debugger"
         - "coder"
         - "tester"
         - "gate:pre-merge-staging"
-    - on: "schedule"
+    - "on": "schedule"
       cron: "0 2 * * *"
       flow:
         - "tester"

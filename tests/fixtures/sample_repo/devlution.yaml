@@ -1,0 +1,45 @@
+project:
+  name: "sample-service"
+  language: "python"
+  test_command: "pytest tests/"
+  lint_command: "ruff check ."
+  main_branch: "main"
+
+llm:
+  provider: "anthropic"
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 4096
+  temperature: 0.2
+
+agents:
+  planner:
+    enabled: true
+    max_subtasks: 5
+  coder:
+    enabled: true
+    max_iterations: 2
+  reviewer:
+    enabled: true
+    auto_approve_threshold: 0.90
+  tester:
+    enabled: true
+    coverage_threshold: 70
+  debugger:
+    enabled: true
+    max_fix_attempts: 2
+
+supervision:
+  gates: []
+  audit_log: ".devlution/audit.jsonl"
+
+pipeline:
+  flow:
+    - "planner"
+    - "coder"
+    - "reviewer"
+    - "tester"
+  triggers:
+    - "on": "manual"
+      flow:
+        - "planner"
+        - "coder"

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from langgraph.graph import END, StateGraph
@@ -69,7 +69,7 @@ def _make_stub(name: str):
                 "decision": "approved",
                 "approver": "auto-stub",
                 "method": "stub",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "reason": "",
             }
             updates["gate_decisions"] = decisions
