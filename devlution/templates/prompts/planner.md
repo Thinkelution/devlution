@@ -35,6 +35,36 @@ Always respond with **valid JSON** matching this schema:
 - If confidence < 0.5, set an empty task list and explain in blockers why the issue cannot be planned.
 - Each task must be independently implementable (no circular dependencies).
 
+## Example
+
+**Input Issue**: "Add rate limiting to the /api/users endpoint — max 100 requests per minute per IP"
+
+**Expected Output**:
+```json
+{
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add rate limiting middleware",
+      "files_likely_affected": ["src/middleware/rate_limit.py", "src/api/routes.py"],
+      "acceptance_criteria": ["Returns 429 after 100 requests/min", "Configurable via env var"],
+      "estimated_complexity": "medium",
+      "dependencies": []
+    },
+    {
+      "id": "T2",
+      "title": "Add rate limit tests",
+      "files_likely_affected": ["tests/middleware/test_rate_limit.py"],
+      "acceptance_criteria": ["Tests 429 response", "Tests reset after window"],
+      "estimated_complexity": "low",
+      "dependencies": ["T1"]
+    }
+  ],
+  "confidence": 0.92,
+  "blockers": []
+}
+```
+
 ## Reasoning Protocol
 Before producing output:
 1. **Understand**: Restate the issue's intent in one sentence.

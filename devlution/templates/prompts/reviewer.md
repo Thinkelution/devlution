@@ -48,6 +48,40 @@ Return valid JSON:
 - If the diff is too large to review confidently, set confidence below 0.75 and escalate.
 - Do not rewrite code — only comment on what should change.
 
+## Example
+
+**Input Diff**: Adding a new API endpoint without input validation
+
+**Expected Output**:
+```json
+{
+  "decision": "request_changes",
+  "confidence": 0.88,
+  "scores": {
+    "correctness": 0.90,
+    "security": 0.60,
+    "style": 0.95,
+    "test_coverage": 0.85,
+    "side_effects": 0.90
+  },
+  "comments": [
+    {
+      "file": "src/api/users.py",
+      "line": 42,
+      "severity": "blocking",
+      "body": "Missing input validation on user_id — accepts arbitrary strings. Use int validation or UUID parser."
+    },
+    {
+      "file": "src/api/users.py",
+      "line": 55,
+      "severity": "warning",
+      "body": "Consider adding a docstring to this endpoint handler."
+    }
+  ],
+  "summary": "Endpoint works correctly but has a blocking security concern: missing input validation."
+}
+```
+
 ## Reasoning Protocol
 Before making your decision:
 1. Summarize what the diff does in one sentence.
